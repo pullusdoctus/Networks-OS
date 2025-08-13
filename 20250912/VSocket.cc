@@ -75,10 +75,10 @@ void VSocket::Close() {
   if (-1 == st) {
     throw std::runtime_error( "VSocket::Close()" );
   }
-  this->idSocket = -1;
   this->IPv6 = false;
+  this->idSocket = -1;
   this->port = -1;
-  this->type = -1;
+  this->type = '\0';
 }
 
 /**
@@ -88,7 +88,7 @@ void VSocket::Close() {
   * @param      char * host: host address in dot notation, example "10.84.166.62"
   * @param      int port: process address, example 80
  **/
-int VSocket::EstablishConnection(const char* hostIP, int port) {
+int VSocket::EstablishConnection(const char* host, int port) {
   int st = -1;
   if ( -1 == st ) {
     throw std::runtime_error( "VSocket::EstablishConnection" );

@@ -20,8 +20,8 @@ class VSocket {
 
   void BuildSocket(char type, bool IPv6 = false );
   void Close();
-  int EstablishConnection(const char* hostip, int port);
-  int EstablishConnection(const char*, const char *);
+  int EstablishConnection(const char* host, int port);
+  int EstablishConnection(const char* host, const char* service);
   virtual int MakeConnection(const char*, int) = 0;
   virtual int MakeConnection(const char*, const char*) = 0;
 
