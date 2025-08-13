@@ -8,27 +8,21 @@
   ****** Socket class interface
   *
   * (Fedora version)
-  *
  **/
 
-#ifndef Socket_h
-#define Socket_h
+#pragma once
 #include "VSocket.h"
 
 class Socket : public VSocket {
-
    public:
-      Socket( char, bool = false );
+      Socket(char type, bool IPv6 = false);
       ~Socket();
-      int MakeConnection( const char *, int );
-      int MakeConnection( const char *, const char * );
-      size_t Read( void *, size_t );
-      size_t Write( const void *, size_t );
-      size_t Write( const char * );
+      int MakeConnection(const char*, int);
+      int MakeConnection(const char*, const char*);
+      size_t Read(void *, size_t);
+      size_t Write(const void*, size_t);
+      size_t Write(const char*);
 
    protected:
 
 };
-
-#endif
-

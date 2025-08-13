@@ -12,6 +12,7 @@
  **/
 
 #pragma once
+#include <stddef.h>
 
 class VSocket {
  public:
