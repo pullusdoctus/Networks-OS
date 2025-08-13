@@ -11,32 +11,28 @@
   *
  **/
 
-#ifndef VSocket_h
-#define VSocket_h
- 
+#pragma once
+
 class VSocket {
-   public:
-      VSocket(char type, bool IPv6);
-      ~VSocket();
+ public:
+  VSocket(char type, bool IPv6);
+  ~VSocket();
 
-      void BuildSocket( char, bool = false );
-      void Close();
-      int EstablishConnection( const char *, int );
-      int EstablishConnection( const char *, const char * );
-      virtual int MakeConnection( const char *, int ) = 0;
-      virtual int MakeConnection( const char *, const char * ) = 0;
+  void BuildSocket(char type, bool IPv6 = false );
+  void Close();
+  int EstablishConnection(const char* hostip, int port);
+  int EstablishConnection(const char*, const char *);
+  virtual int MakeConnection(const char*, int) = 0;
+  virtual int MakeConnection(const char*, const char*) = 0;
 
-      virtual size_t Connect( const char *, int ) = 0;
-      virtual size_t Read( void *, size_t ) = 0;
-      virtual size_t Write( const void *, size_t ) = 0;
-      virtual size_t Write( const char * ) = 0;
+  virtual size_t Connect(const char*, int) = 0;
+  virtual size_t Read(void*, size_t) = 0;
+  virtual size_t Write(const void*, size_t) = 0;
+  virtual size_t Write(const char*) = 0;
 
-   protected:
-      int idSocket;   // Socket identifier
-      bool IPv6;      // Is IPv6 socket?
-      int port;       // Socket associated port
-      char type;      // Socket type (datagram, stream, etc.)
-        
+ protected:
+  bool IPv6;      // Is IPv6 socket?
+  int idSocket;   // Socket identifier
+  int port;       // Socket associated port
+  char type;      // Socket type (datagram, stream, etc.)
 };
-
-#endif // VSocket_h
