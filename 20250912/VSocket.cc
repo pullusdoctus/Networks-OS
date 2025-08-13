@@ -21,6 +21,11 @@
 // #include <sys/types.h>
 #include "VSocket.h"
 
+VSocket::VSocket(char type, bool IPv6)
+  : type(type), IPv6(IPv6), idSocket(-1), port(-1) {
+  this->BuildSocket(this->type, this->IPv6);
+}
+
 /**
   *  Class constructor
   *     use Unix socket system call
@@ -30,12 +35,7 @@
   *     'd' for datagram
   *  @param     bool ipv6: if we need a IPv6 socket
  **/
-void VSocket::BuildSocket(char type, bool IPv6 ) {
-  this->IPv6 = IPv6;
-  this->idSocket = -1;
-  this->port = -1;
-  this->type = type;
-  int st = -1;
+void VSocket::BuildSocket(char type, bool IPv6) {
   int domain = -1;
   int typeCode = -1;
   if (IPv6) {
@@ -51,11 +51,12 @@ void VSocket::BuildSocket(char type, bool IPv6 ) {
     // TODO: error handling
     typeCode = SOCK_STREAM;
   }
+  int st = -1;
   if (domain != -1 && typeCode != -1) {
     st = socket(domain, typeCode, 0);
   }
-  if (-1 == st) {
-    throw std::runtime_error("VSocket::BuildSocket, (reason)");
+  if (st == -1) {
+    throw std::runtime_error("VSocket::BuildSocket");
   }
   this->idSocket = st;
 }
@@ -85,7 +86,7 @@ void VSocket::Close() {
   * EstablishConnection method
   *   use "connect" Unix system call
   *
-  * @param      char * host: host address in dot notation, example "10.84.166.62"
+  * @param      char* host: host address in dot notation, example "10.84.166.62"
   * @param      int port: process address, example 80
  **/
 int VSocket::EstablishConnection(const char* host, int port) {
