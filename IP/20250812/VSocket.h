@@ -36,4 +36,7 @@ class VSocket {
   int idSocket;   // Socket identifier
   int port;       // Socket associated port
   char type;      // Socket type (datagram, stream, etc.)
+
+  int EstablishIPv4(int st, const char* host, int port);
+  int EstablishIPv6(int st, const char* host, int port);
 };

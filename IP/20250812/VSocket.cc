@@ -72,12 +72,14 @@ VSocket::~VSocket() { this->Close(); }
   *    use Unix close system call (once opened a socket is managed like a file in Unix)
  **/
 void VSocket::Close() {
-  int st = close(this->idSocket);
-  if (-1 == st) {
-    throw std::runtime_error( "VSocket::Close()" );
+  if (this->idSocket != -1) {
+    int st = close(this->idSocket);
+    if (-1 == st) {
+      throw std::runtime_error("VSocket::Close");
+    }
+    this->idSocket = -1;
   }
   this->IPv6 = false;
-  this->idSocket = -1;
   this->port = -1;
   this->type = '\0';
 }
@@ -91,9 +93,39 @@ void VSocket::Close() {
  **/
 int VSocket::EstablishConnection(const char* host, int port) {
   int st = -1;
-  if ( -1 == st ) {
-    throw std::runtime_error( "VSocket::EstablishConnection" );
+  if (this->IPv6) st = this->EstablishIPv6(st, host, port);
+  else st = this->EstablishIPv4(st, host, port);
+  if (-1 == st) {
+    throw std::runtime_error(
+      "VSocket::EstablishConnection - Connection failed");
   }
+  this->port = port;
+  return st;
+}
+
+int VSocket::EstablishIPv4(int st, const char* host, int port) {
+  struct sockaddr_in host4;
+  memset((char*)&host4, 0, sizeof(host4));
+  host4.sin_family = AF_INET;
+  st = inet_pton(AF_INET, host, &host4.sin_addr);
+  if (st == -1 | st == 0) {
+    throw std::runtime_error("VSocket::EstablishIPv4 - inet_pton IPV4 failed");
+  }
+  host4.sin_port = htons(port);
+  st = connect(this->idSocket, (sockaddr*)&host4, sizeof(host4));
+  return st;
+}
+
+int VSocket::EstablishIPv6(int st, const char* host, int port) {
+  struct sockaddr_in6 host6;
+  memset((char*)&host6, 0, sizeof(host6));
+  host6.sin6_family = AF_INET6;
+  st = inet_pton(AF_INET6, host, &host6.sin6_addr);
+  if (st == -1 | st == 0) {
+    throw std::runtime_error("VSocket::EstablishIPv6 - inet_pton IPv6 failed");
+  }
+  host6.sin6_port = htons(port);
+  st = connect(this->idSocket, (sockaddr*)&host6, sizeof(host6));
   return st;
 }
 
