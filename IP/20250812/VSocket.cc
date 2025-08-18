@@ -48,15 +48,15 @@ void VSocket::BuildSocket(char type, bool IPv6) {
   } else if (type == 'd') {
     typeCode = SOCK_DGRAM;
   } else {
-    // TODO: error handling
-    typeCode = SOCK_STREAM;
+    throw std::runtime_error("VSocket::BuildSocket - Invalid socket type");
   }
   int st = -1;
   if (domain != -1 && typeCode != -1) {
     st = socket(domain, typeCode, 0);
   }
   if (st == -1) {
-    throw std::runtime_error("VSocket::BuildSocket");
+    throw std::runtime_error(
+      "VSocket::BuildSocket - Socket building unsuccesful");
   }
   this->idSocket = st;
 }
