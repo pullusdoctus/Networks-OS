@@ -95,7 +95,7 @@ int VSocket::EstablishConnection(const char* host, int port) {
   int st = -1;
   if (this->IPv6) st = this->EstablishIPv6(st, host, port);
   else st = this->EstablishIPv4(st, host, port);
-  if (-1 == st) {
+  if (st == -1) {
     throw std::runtime_error(
       "VSocket::EstablishConnection - Connection failed");
   }
@@ -108,7 +108,7 @@ int VSocket::EstablishIPv4(int st, const char* host, int port) {
   memset((char*)&host4, 0, sizeof(host4));
   host4.sin_family = AF_INET;
   st = inet_pton(AF_INET, host, &host4.sin_addr);
-  if (st == -1 | st == 0) {
+  if (st == -1 || st == 0) {
     throw std::runtime_error("VSocket::EstablishIPv4 - inet_pton IPV4 failed");
   }
   host4.sin_port = htons(port);
@@ -121,7 +121,7 @@ int VSocket::EstablishIPv6(int st, const char* host, int port) {
   memset((char*)&host6, 0, sizeof(host6));
   host6.sin6_family = AF_INET6;
   st = inet_pton(AF_INET6, host, &host6.sin6_addr);
-  if (st == -1 | st == 0) {
+  if (st == -1 || st == 0) {
     throw std::runtime_error("VSocket::EstablishIPv6 - inet_pton IPv6 failed");
   }
   host6.sin6_port = htons(port);
@@ -137,7 +137,20 @@ int VSocket::EstablishIPv6(int st, const char* host, int port) {
   * @param      char * service: process address, example "http"
  **/
 int VSocket::EstablishConnection(const char* host, const char* service) {
+  struct addrinfo hints, *result;
   int st = -1;
-  throw std::runtime_error( "VSocket::EstablishConnection" );
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = this->IPv6 ? AF_INET6 : AF_INET;
+  hints.ai_socktype = (this->type == 's') ? SOCK_STREAM : SOCK_DGRAM;
+  st = getaddrinfo(host, service, &hints, &result);
+  if (st != 0) {
+    throw std::runtime_error(
+      "VSocket::EstablishConnection - getaddrinfo failed");
+  }
+  st = connect(this->idSocket, result->ai_addr, result->ai_addrlen);
+  freeaddrinfo(result);
+  if (st == -1) {
+    throw std::runtime_error("VSocket::EstablishConnection - connect failed");
+  }
   return st;
 }
