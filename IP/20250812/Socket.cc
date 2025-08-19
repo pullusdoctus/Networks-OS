@@ -73,10 +73,10 @@ int Socket::MakeConnection(const char* host, const char* service) {
   * @param      int size: buffer capacity, read will stop if buffer is full
   *
  **/
-size_t Socket::Read(void* buffer, size_t size) {
-  int st = -1;
+size_t Socket::Read(void* buffer, size_t bufferSize) {
+  int st = read(this->idSocket, buffer, bufferSize);
   if  (st == -1) {
-    throw std::runtime_error("Socket::Read(void*, size_t)");
+    throw std::runtime_error("Socket::Read - could not read from socket");
   }
   return st;
 }
