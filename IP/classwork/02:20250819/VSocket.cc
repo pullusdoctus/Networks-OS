@@ -151,6 +151,11 @@ int VSocket::EstablishConnection(const char* host, const char* service) {
   return st;
 }
 
+/**
+  *  Uses "bind" Unix system call (man 2 bind) (server mode)
+  *  @param      int port: bind a unnamed socket to a port defined in sockaddr structure
+  *  Links the calling process to a service at port
+ **/
 int VSocket::Bind(int port) {
   int st = -1;
   struct sockaddr_in host4;
@@ -161,6 +166,12 @@ int VSocket::Bind(int port) {
   return st;
 }
 
+/**
+  *  @param	const void * buffer: data to send
+  *  @param	size_t size data size to send
+  *  @param	void * addr address to send data
+  *  Send data to another network point (addr) without connection (Datagram)
+ **/
 size_t VSocket::SendTo(const void* buffer, size_t bufferSize, void* destiny) {
   int st = -1;
   if (this->type = 'd') st = sendto(
@@ -172,6 +183,13 @@ size_t VSocket::SendTo(const void* buffer, size_t bufferSize, void* destiny) {
   return st;
 }
 
+/**
+  *  @param	const void * buffer: data to send
+  *  @param	size_t size data size to send
+  *  @param	void * addr address to receive from data
+  *  @return	size_t bytes received
+  *  Receive data from another network point (addr) without connection (Datagram)
+ **/
 size_t VSocket::ReceiveFrom(void*, size_t, void*) {
   int st = -1;
   return st;
