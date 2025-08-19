@@ -32,6 +32,8 @@ class VSocket {
   virtual size_t Write(const char* text) = 0;
 
   int Bind(int);
+
+  // UPD
   size_t SendTo(const void*, size_t, void*);
   size_t ReceiveFrom(void*, size_t, void*);
 

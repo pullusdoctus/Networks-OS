@@ -58,7 +58,6 @@ void VSocket::BuildSocket(char type, bool IPv6) {
   this->idSocket = st;
 }
 
-
 /**
   * Class destructor
  **/
@@ -150,4 +149,24 @@ int VSocket::EstablishConnection(const char* host, const char* service) {
     throw std::runtime_error("VSocket::EstablishConnection - connect failed");
   }
   return st;
+}
+
+int VSocket::Bind(int) {
+  int st = -1;
+  struct sockaddr_in host4;
+  host4.sin_family = AF_INET;
+  host4.sin_addr.s_addr = htonl(INADDR_ANY);
+  host4.sin_port = this->port;
+  memset(host4.sin_zero, '\0', sizeof(host4.sin_zero));
+  return st;
+}
+
+size_t VSocket::SendTo(const void*, size_t, void*) {
+  int st = -1;
+  return;
+}
+
+size_t VSocket::ReceiveFrom(void*, size_t, void*) {
+  int st = -1;
+  return;
 }
