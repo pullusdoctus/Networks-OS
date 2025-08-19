@@ -89,10 +89,10 @@ size_t Socket::Read(void* buffer, size_t bufferSize) {
   * @param      size_t size: buffer capacity, number of bytes to write
   *
  **/
-size_t Socket::Write(const void* buffer, size_t size) {
-  int st = -1;
+size_t Socket::Write(const void* buffer, size_t bufferSize) {
+  int st = write(this->idSocket, buffer, bufferSize);
   if (st == -1) {
-    throw std::runtime_error("Socket::Write(void*, size_t)");
+    throw std::runtime_error("Socket::Write - could not write to buffer");
   }
   return st;
 }
@@ -105,9 +105,9 @@ size_t Socket::Write(const void* buffer, size_t size) {
   *
  **/
 size_t Socket::Write(const char* text) {
-  int st = -1;
-  if ( -1 == st ) {
-    throw std::runtime_error("Socket::Write(char*)");
+  int st = write(this->idSocket, text, strlen(text));
+  if (st == -1) {
+    throw std::runtime_error("Socket::Write - could not write text to buffer");
   }
   return st;
 }
