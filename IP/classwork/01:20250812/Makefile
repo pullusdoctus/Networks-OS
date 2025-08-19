@@ -21,7 +21,7 @@ ALL := $(TARGETS)
 ipv4-test.out: ipv4-test.o Socket.o VSocket.o
 	$(CXX) -g ipv4-test.o Socket.o VSocket.o -o $@
 
-ipv6-test.out: ipv6-test.o Socket.o
+ipv6-test.out: ipv6-test.o Socket.o VSocket.o
 	$(CXX) -g ipv6-test.o Socket.o VSocket.o -o $@
 
 clean:
