@@ -17,8 +17,8 @@ class Socket : public VSocket {
    public:
       Socket(char type, bool IPv6 = false);
       ~Socket();
-      int MakeConnection(const char*, int);
-      int MakeConnection(const char*, const char*);
+      int MakeConnection(const char* host, int port);
+      int MakeConnection(const char* host, const char* service);
       size_t Read(void *, size_t);
       size_t Write(const void*, size_t);
       size_t Write(const char*);

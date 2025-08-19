@@ -28,14 +28,10 @@
   *     's' for stream
   *     'd' for datagram
   *  @param     bool ipv6: if we need a IPv6 socket
-  *
  **/
-Socket::Socket( char t, bool IPv6 ) {
-
-   this->BuildSocket( t, IPv6 );      // Call base class constructor
-
+Socket::Socket(char type, bool IPv6) {
+  this->BuildSocket(type, IPv6);  // Call base class constructor
 }
-
 
 /**
   *  Class destructor
@@ -43,10 +39,7 @@ Socket::Socket( char t, bool IPv6 ) {
   *  @param     int id: socket descriptor
   *
  **/
-Socket::~Socket() {
-
-}
-
+Socket::~Socket() { this->Close(); }
 
 /**
   * MakeConnection method
@@ -56,12 +49,9 @@ Socket::~Socket() {
   * @param      int port: process address, example 80
   *
  **/
-int Socket::MakeConnection( const char * hostip, int port ) {
-
-   return this->EstablishConnection( hostip, port );
-
+int Socket::MakeConnection(const char* host, int port) {
+  return this->EstablishConnection(host, port);
 }
-
 
 /**
   * MakeConnection method
@@ -71,12 +61,9 @@ int Socket::MakeConnection( const char * hostip, int port ) {
   * @param      char * service: process address, example "http"
   *
  **/
-int Socket::MakeConnection( const char *host, const char *service ) {
-
-   return this->EstablishConnection( host, service );
-
+int Socket::MakeConnection(const char* host, const char* service) {
+   return this->EstablishConnection(host, service);
 }
-
 
 /**
   * Read method
@@ -86,18 +73,13 @@ int Socket::MakeConnection( const char *host, const char *service ) {
   * @param      int size: buffer capacity, read will stop if buffer is full
   *
  **/
-size_t Socket::Read( void * buffer, size_t size ) {
-
-   int st = -1;
-
-   if ( -1 == st ) {
-      throw std::runtime_error( "Socket::Read( void *, size_t )" );
-   }
-
-   return st;
-
+size_t Socket::Read(void* buffer, size_t size) {
+  int st = -1;
+  if  (st == -1) {
+    throw std::runtime_error("Socket::Read(void*, size_t)");
+  }
+  return st;
 }
-
 
 /**
   * Write method
@@ -107,18 +89,13 @@ size_t Socket::Read( void * buffer, size_t size ) {
   * @param      size_t size: buffer capacity, number of bytes to write
   *
  **/
-size_t Socket::Write( const void * buffer, size_t size ) {
-
-   int st = -1;
-
-   if ( -1 == st ) {
-      throw std::runtime_error( "Socket::Write( void *, size_t )" );
-   }
-
-   return st;
-
+size_t Socket::Write(const void* buffer, size_t size) {
+  int st = -1;
+  if (st == -1) {
+    throw std::runtime_error("Socket::Write(void*, size_t)");
+  }
+  return st;
 }
-
 
 /**
   * Write method
@@ -127,15 +104,10 @@ size_t Socket::Write( const void * buffer, size_t size ) {
   * @param      char * text: text to write to socket
   *
  **/
-size_t Socket::Write( const char * text ) {
-
-   int st = -1;
-
-   if ( -1 == st ) {
-      throw std::runtime_error( "Socket::Write( char * )" );
-   }
-
-   return st;
-
+size_t Socket::Write(const char* text) {
+  int st = -1;
+  if ( -1 == st ) {
+    throw std::runtime_error("Socket::Write(char*)");
+  }
+  return st;
 }
-
