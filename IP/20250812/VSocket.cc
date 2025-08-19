@@ -21,11 +21,6 @@
 // #include <sys/types.h>
 #include "VSocket.h"
 
-VSocket::VSocket(char type, bool IPv6)
-  : type(type), IPv6(IPv6), idSocket(-1), port(-1) {
-  this->BuildSocket(this->type, this->IPv6);
-}
-
 /**
   *  Class constructor
   *     use Unix socket system call
@@ -36,6 +31,8 @@ VSocket::VSocket(char type, bool IPv6)
   *  @param     bool ipv6: if we need a IPv6 socket
  **/
 void VSocket::BuildSocket(char type, bool IPv6) {
+  this->type = type;
+  this->IPv6 = IPv6;
   int domain = -1;
   int typeCode = -1;
   if (IPv6) {

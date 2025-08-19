@@ -16,7 +16,6 @@
 
 class VSocket {
  public:
-  VSocket(char type, bool IPv6);
   ~VSocket();
 
   void BuildSocket(char type, bool IPv6 = false );
