@@ -1,6 +1,5 @@
 // Ejemplo de sockets con IPv4
 #include <stdio.h>
-// #include <string.h> NOTE: not sure why this is included
 #include "VSocket.h"
 #include "Socket.h"
 

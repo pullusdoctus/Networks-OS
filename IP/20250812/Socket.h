@@ -17,12 +17,10 @@ class Socket : public VSocket {
    public:
       Socket(char type, bool IPv6 = false);
       ~Socket();
-      int MakeConnection(const char* host, int port);
-      int MakeConnection(const char* host, const char* service);
-      size_t Read(void* buffer, size_t bufferSize);
-      size_t Write(const void* buffer, size_t bufferSize);
-      size_t Write(const char* text);
-
-   protected:
-
+      size_t Connect(const char* host, int port) override;
+      int MakeConnection(const char* host, int port) override;
+      int MakeConnection(const char* host, const char* service) override;
+      size_t Read(void* buffer, size_t bufferSize) override;
+      size_t Write(const void* buffer, size_t bufferSize) override;
+      size_t Write(const char* text) override;
 };

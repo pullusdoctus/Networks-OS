@@ -41,6 +41,10 @@ Socket::Socket(char type, bool IPv6) {
  **/
 Socket::~Socket() { this->Close(); }
 
+size_t Socket::Connect(const char* host, int port) {
+  return this->MakeConnection(host, port);
+}
+
 /**
   * MakeConnection method
   *   use "EstablishConnection" in base class
