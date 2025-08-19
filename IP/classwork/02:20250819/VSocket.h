@@ -11,36 +11,31 @@
   *
  **/
 
-#ifndef VSocket_h
-#define VSocket_h
- 
+#pragma once
+#include <stddef.h>
+
 class VSocket {
-   public:
-       void BuildSocket( char, bool = false );
-      ~VSocket();
+ public:
+  ~VSocket();
 
-      void Close();
-      int EstablishConnection( const char *, int );
-      int EstablishConnection( const char *, const char * );
-      virtual int MakeConnection( const char *, int ) = 0;
-      virtual int MakeConnection( const char *, const char * ) = 0;
+  void BuildSocket(char type, bool IPv6 = false );
+  void Close();
+  int EstablishConnection(const char* host, int port);
+  int EstablishConnection(const char* host, const char* service);
+  virtual int MakeConnection(const char* host, int port) = 0;
+  virtual int MakeConnection(const char* host, const char* service) = 0;
 
-      virtual size_t Read( void *, size_t ) = 0;
-      virtual size_t Write( const void *, size_t ) = 0;
-      virtual size_t Write( const char * ) = 0;
+  virtual size_t Connect(const char* host, int port) = 0;
+  virtual size_t Read(void* buffer, size_t bufferSize) = 0;
+  virtual size_t Write(const void* buffer, size_t bufferSize) = 0;
+  virtual size_t Write(const char* text) = 0;
 
-      int Bind( int );
+ protected:
+  bool IPv6;      // Is IPv6 socket?
+  int idSocket;   // Socket identifier
+  int port;       // Socket associated port
+  char type;      // Socket type (datagram, stream, etc.)
 
-// UDP methods
-      size_t sendTo( const void *, size_t, void * );
-      size_t recvFrom( void *, size_t, void * );
-
-   protected:
-      int idSocket;   // Socket identifier
-      bool IPv6;      // Is IPv6 socket?
-      int port;       // Socket associated port
-      char type;      // Socket type (datagram, stream, etc.)
-        
+  int EstablishIPv4(int st, const char* host, int port);
+  int EstablishIPv6(int st, const char* host, int port);
 };
-
-#endif // VSocket_h
