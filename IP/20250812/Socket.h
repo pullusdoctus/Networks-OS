@@ -19,9 +19,9 @@ class Socket : public VSocket {
       ~Socket();
       int MakeConnection(const char* host, int port);
       int MakeConnection(const char* host, const char* service);
-      size_t Read(void *, size_t);
-      size_t Write(const void*, size_t);
-      size_t Write(const char*);
+      size_t Read(void* buffer, size_t bufferSize);
+      size_t Write(const void* buffer, size_t bufferSize);
+      size_t Write(const char* text);
 
    protected:
 
