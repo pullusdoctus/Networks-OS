@@ -190,7 +190,11 @@ size_t VSocket::SendTo(const void* buffer, size_t bufferSize, void* destiny) {
   *  @return	size_t bytes received
   *  Receive data from another network point (addr) without connection (Datagram)
  **/
-size_t VSocket::ReceiveFrom(void*, size_t, void*) {
-  int st = -1;
+size_t VSocket::ReceiveFrom(void* buffer, size_t bufferSize, void* origin) {
+  int st = recvfrom(
+    this->idSocket, buffer, bufferSize, MSG_DONTWAIT, (sockaddr*)origin, (socklen_t*)sizeof(origin));
+  if (st == -1) {
+    throw std::runtime_error("VSocket::ReceiveFrom - receive failed");
+  }
   return st;
 }
