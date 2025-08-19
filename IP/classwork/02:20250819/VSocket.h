@@ -31,10 +31,10 @@ class VSocket {
   virtual size_t Write(const void* buffer, size_t bufferSize) = 0;
   virtual size_t Write(const char* text) = 0;
 
-  int Bind(int);
+  int Bind(int port);
 
   // UPD
-  size_t SendTo(const void*, size_t, void*);
+  size_t SendTo(const void* buffer, size_t bufferSize, void* destiny);
   size_t ReceiveFrom(void*, size_t, void*);
 
  protected:

@@ -151,22 +151,28 @@ int VSocket::EstablishConnection(const char* host, const char* service) {
   return st;
 }
 
-int VSocket::Bind(int) {
+int VSocket::Bind(int port) {
   int st = -1;
   struct sockaddr_in host4;
   host4.sin_family = AF_INET;
   host4.sin_addr.s_addr = htonl(INADDR_ANY);
-  host4.sin_port = this->port;
+  host4.sin_port = port;
   memset(host4.sin_zero, '\0', sizeof(host4.sin_zero));
   return st;
 }
 
-size_t VSocket::SendTo(const void*, size_t, void*) {
+size_t VSocket::SendTo(const void* buffer, size_t bufferSize, void* destiny) {
   int st = -1;
-  return;
+  if (this->type = 'd') st = sendto(
+    this->idSocket, buffer, bufferSize, MSG_CONFIRM, (sockaddr*)destiny, sizeof(destiny));
+  else st = sendto(this->idSocket, buffer, bufferSize, MSG_DONTWAIT, NULL, 0);
+  if (st == -1) {
+    throw std::runtime_error("VSocket::SendTo - send failed");
+  }
+  return st;
 }
 
 size_t VSocket::ReceiveFrom(void*, size_t, void*) {
   int st = -1;
-  return;
+  return st;
 }
