@@ -157,12 +157,16 @@ int VSocket::EstablishConnection(const char* host, const char* service) {
   *  Links the calling process to a service at port
  **/
 int VSocket::Bind(int port) {
-  int st = -1;
   struct sockaddr_in host4;
   host4.sin_family = AF_INET;
   host4.sin_addr.s_addr = htonl(INADDR_ANY);
-  host4.sin_port = port;
+  host4.sin_port = htons(port);
   memset(host4.sin_zero, '\0', sizeof(host4.sin_zero));
+  int st = bind(this->idSocket, (struct sockaddr*)&host4, sizeof(host4));
+  if (st == -1) {
+    throw std::runtime_error("VSocket::Bind - bind failed");
+  }
+  this->port = port;
   return st;
 }
 
@@ -174,7 +178,7 @@ int VSocket::Bind(int port) {
  **/
 size_t VSocket::SendTo(const void* buffer, size_t bufferSize, void* destiny) {
   int st = -1;
-  if (this->type = 'd') st = sendto(
+  if (this->type == 'd') st = sendto(
     this->idSocket, buffer, bufferSize, MSG_CONFIRM, (sockaddr*)destiny, sizeof(destiny));
   else st = sendto(this->idSocket, buffer, bufferSize, MSG_DONTWAIT, NULL, 0);
   if (st == -1) {
