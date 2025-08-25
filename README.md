@@ -12,4 +12,4 @@ Repository for classwork and homework done for the classes CI-0121 Data Communic
 
 ## Credits
 
-[@pullusdoctus](https://github.com/pullusdoctus)
+Jeremy Andrey Rojas Cerna (B96804) [@pullusdoctus](https://github.com/pullusdoctus)
