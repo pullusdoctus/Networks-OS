@@ -178,9 +178,17 @@ int VSocket::Bind(int port) {
  **/
 size_t VSocket::SendTo(const void* buffer, size_t bufferSize, void* destiny) {
   int st = -1;
-  if (this->type == 'd') st = sendto(
-    this->idSocket, buffer, bufferSize, MSG_CONFIRM, (sockaddr*)destiny, sizeof(destiny));
-  else st = sendto(this->idSocket, buffer, bufferSize, MSG_DONTWAIT, NULL, 0);
+  if (this->type == 'd') {
+    if (this->IPv6) {
+      st = sendto(this->idSocket, buffer, bufferSize, 0,
+                  (sockaddr*)destiny, sizeof(struct sockaddr_in6));
+    } else {
+      st = sendto(this->idSocket, buffer, bufferSize, 0,
+                  (sockaddr*)destiny, sizeof(struct sockaddr_in));
+    }
+  } else {
+    st = sendto(this->idSocket, buffer, bufferSize, 0, NULL, 0);
+  }
   if (st == -1) {
     throw std::runtime_error("VSocket::SendTo - send failed");
   }
@@ -195,8 +203,14 @@ size_t VSocket::SendTo(const void* buffer, size_t bufferSize, void* destiny) {
   *  Receive data from another network point (addr) without connection (Datagram)
  **/
 size_t VSocket::ReceiveFrom(void* buffer, size_t bufferSize, void* origin) {
-  int st = recvfrom(
-    this->idSocket, buffer, bufferSize, MSG_DONTWAIT, (sockaddr*)origin, (socklen_t*)sizeof(origin));
+  socklen_t originLen = 0;
+  if (this->IPv6) {
+    originLen = sizeof(struct sockaddr_in6);
+  } else {
+    originLen = sizeof(struct sockaddr_in);
+  }
+  int st = recvfrom(this->idSocket, buffer, bufferSize, 0,
+                    (sockaddr*)origin, &originLen);
   if (st == -1) {
     throw std::runtime_error("VSocket::ReceiveFrom - receive failed");
   }
