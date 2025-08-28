@@ -1,6 +1,6 @@
 # Determine the degree, diameter and the bisection bandwidth of the network below:
 
-![[topology.png]]
+![example_topology](./topology.png)
 
 ## Degree
 
@@ -16,4 +16,4 @@ The minimum amount of wires that can be cut to divide the network in half is by 
 
 # Draw a hybrid topology with a mesh backbone connecting two ring backbones. Each ring backbone connects three star networks.
 
-![[hybrid_topology.svg]]
+![hybrid_topology](./hybrid_topology.svg)
