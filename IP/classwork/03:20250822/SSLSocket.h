@@ -29,9 +29,9 @@ class SSLSocket : public VSocket {
     const char* GetCipher();
 
   private:
-    void Init( bool = false );		// Defaults to create a client context, true if server context needed
-    void InitContext( bool );
-    void LoadCertificates( const char *, const char * );
+    void Init(bool = false);		// Defaults to create a client context, true if server context needed
+    void InitContext(bool);
+    void LoadCertificates(const char*, const char*);
 
     // Instance variables
     void* SSLContext;				// SSL context
