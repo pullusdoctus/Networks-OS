@@ -122,8 +122,11 @@ void SSLSocket::InitContext(bool serverContext) {
  *
  **/
 int SSLSocket::MakeConnection(const char* hostName, int port) {
-  int st;
-  st = this->MakeConnection(hostName, port);		// Establish a non ssl connection first
+  int st = this->EstablishConnection(hostName, port);		// Establish a non ssl connection first
+  if (st != 0) return st;
+  SSL_set_fd((SSL*)this->SSLStruct, this->idSocket);
+  int ssl_st = SSL_connect((SSL*)this->SSLStruct);
+  if (ssl_st > 0) st = ssl_st;
   return st;
 }
 
@@ -138,8 +141,11 @@ int SSLSocket::MakeConnection(const char* hostName, int port) {
  *  @param	char * service, service name
  **/
 int SSLSocket::MakeConnection(const char* host, const char* service) {
-  int st;
-  st = this->MakeConnection(host, service);
+  int st = this->EstablishConnection(host, service);
+  if (st != 0) return st;
+  SSL_set_fd((SSL*)this->SSLStruct, this->idSocket);
+  int ssl_st = SSL_connect((SSL*)this->SSLStruct);
+  if (ssl_st > 0) st = ssl_st;
   return st;
 }
 
@@ -156,8 +162,8 @@ int SSLSocket::MakeConnection(const char* host, const char* service) {
   *  Reads data from secure channel
  **/
 size_t SSLSocket::Read(void* buffer, size_t size) {
-  int st = -1;
-  if (-1 == st) {
+  int st = SSL_read((SSL*)this->SSLStruct, buffer, size);
+  if (st <= 0) {
     throw std::runtime_error("SSLSocket::Read(void*, size_t)");
   }
   return st;
@@ -176,8 +182,8 @@ size_t SSLSocket::Read(void* buffer, size_t size) {
   *  Writes data to a secure channel
  **/
 size_t SSLSocket::Write(const char* string) {
-  int st = -1;
-  if ( -1 == st ) {
+  int st = SSL_write((SSL*)this->SSLStruct, string, strlen(string));
+  if (st <= 0) {
     throw std::runtime_error("SSLSocket::Write(const char*)");
   }
   return st;
@@ -196,8 +202,8 @@ size_t SSLSocket::Write(const char* string) {
   *  Reads data from secure channel
  **/
 size_t SSLSocket::Write(const void* buffer, size_t size) {
-  int st = -1;
-  if ( -1 == st ) {
+  int st = SSL_write((SSL*)this->SSLStruct, buffer, size);
+  if (st <= 0) {
     throw std::runtime_error("SSLSocket::Write(void*, size_t)");
   }
   return st;
