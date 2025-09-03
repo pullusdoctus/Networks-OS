@@ -1,19 +1,29 @@
 #include <chrono>
 #include <ctime>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <map>
+#include <netdb.h>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <sys/socket.h>
+#include <unistd.h>
 #include <vector>
+
+#include "Socket.h"
 
 class Server {
  private:
   std::string storage_dir;
   std::map<std::string, std::string>file_metadata;
   int file_counter;
+  int port;
+  Socket* serverSocket;
+  bool running;
 
   std::string curr_time() {
     auto now = std::time(nullptr);
@@ -93,23 +103,6 @@ class Server {
     return info.str();
   }
 
- public:
-  Server(const std::string& storage_dir = ".")
-    : storage_dir(storage_dir), file_counter(0) {
-    std::filesystem::create_directories(this->storage_dir);
-
-    auto files = this->get_filelist();
-    for (const auto& file : files) {
-      if (file.find("ascii_") == 0) {
-        try {
-          int num = std::stoi(file.substr(6, file.find(".txt") - 6));
-          this->file_counter = std::max(this->file_counter, num);
-        } catch (const std::exception& e) {
-        }
-      }
-    }
-  }
-
   std::string process_command(const std::string& command) {
     std::istringstream iss(command);
     std::string method;
@@ -148,7 +141,7 @@ class Server {
       std::string filename;
       iss >> filename;
       if (filename.empty()) return "err No filename";
-      if (!file_exists(filename)) return "File not found: " + filename;
+      if (!file_exists(filename)) return "err File not found: " + filename;
 
       std::string info = this->get_fileinfo(filename);
       if (info.empty()) return "err Could not retrieve file information";
@@ -161,24 +154,96 @@ class Server {
     }
   }
 
+  void handle_fork(Socket* forkSocket) {
+    try {
+      std::cout << "Fork connected" << std::endl;
+      char buffer[4096];
+      while (this->running) {
+        size_t bytesRead = forkSocket->Read(buffer, sizeof(buffer) - 1);
+        if (bytesRead == 0) break;
+
+        buffer[bytesRead] = '\0';
+        std::string command(buffer);
+
+        if (!command.empty() && command.back() == '\n') command.pop_back();
+
+        std::cout << "Received: " << command << std::endl;
+        std::string response = this->process_command(command);
+        response += "\n";
+
+        forkSocket->Write(response.c_str());
+
+        if (command.find("close") != std::string::npos) break;
+      }
+    } catch (const std::exception& e) {
+      std::cerr << "Error handling fork: " << e.what() << std::endl;
+    }
+    delete forkSocket;
+    std::cout << "Fork disconnected" << std::endl;
+  }
+
+ public:
+  Server(int port, const std::string& storage_dir = ".")
+    : storage_dir(storage_dir), file_counter(0), port(port),
+      serverSocket(nullptr), running(false) {
+    std::filesystem::create_directories(this->storage_dir);
+
+    auto files = this->get_filelist();
+    for (const auto& file : files) {
+      if (file.find("ascii_") == 0) {
+        try {
+          int num = std::stoi(file.substr(6, file.find(".txt") - 6));
+          this->file_counter = std::max(this->file_counter, num);
+        } catch (const std::exception& e) {
+        }
+      }
+    }
+  }
+
+  ~Server() { this->stop(); }
+
+  bool start() {
+    try {
+      this->serverSocket = new Socket('s', false);
+      serverSocket->Bind(this->port);
+      if (this->serverSocket->Listen(5) == -1) {
+        throw std::runtime_error("Failed to listen on socket");
+      }
+      this->running = true;
+      std::cout << "=== ASCII ART SERVER STARTED ===\n" << std::endl;
+      std::cout << "Storage directory: " << this->storage_dir << std::endl;
+      return true;
+    } catch (const std::exception& e) {
+      std::cerr << "Failed to run server: " << e.what() << std::endl;
+      return false;
+    }
+  }
+
+  void stop() {
+    this->running = false;
+    if (this->serverSocket) delete this->serverSocket;
+  }
+
   void run() {
-    std::cout << "=== ASCII ART SERVER STARTED ===\n" << std::endl;
-    std::cout << "Storage directory: " << this->storage_dir << std::endl;
-    std::cout << "Method ('exit' to quit): ";
-    std::string input;
-    while (std::getline(std::cin, input)) {
-      if (input == "exit") break;
-      if (!input.empty()) {
-        std::string response = this->process_command(input);
-        std::cout << response << std::endl;
+    if (!this->start()) return;
+    while (this->running) {
+      try {
+        Socket* forkSocket = this->serverSocket->Accept();
+        this->handle_fork(forkSocket);
+      } catch (const std::exception& e) {
+          std::cerr << "Error in server loop: " << e.what() << std::endl;
       }
     }
     std::cout << "Server shutting down..." << std::endl;
   }
 };
 
-int main() {
-  Server server = Server("./ascii-art");
+int main(int argc, char* argv[]) {
+  if (argc != 3) {
+    std::cout << "USAGE: ./server port storage-directory" << std::endl;
+    return 1;
+  }
+  Server server = Server(std::stoi(argv[1]), argv[2]);
   server.run();
   return 0;
 }

@@ -6,14 +6,15 @@ FORK = fork
 
 SERVER_SRC = server.cpp
 FORK_SRC = fork.cpp
+SOCKET_SRC = Socket.cc VSocket.cc
 
 all: $(SERVER) $(FORK)
 
-$(SERVER): $(SERVER_SRC)
-	$(CXX) $(CXXFLAGS) -o $(SERVER) $(SERVER_SRC)
+$(SERVER): $(SERVER_SRC) $(SOCKET_SRC)
+	$(CXX) $(CXXFLAGS) -o $(SERVER) $(SERVER_SRC) $(SOCKET_SRC)
 
-$(FORK): $(FORK_SRC)
-	$(CXX) $(CXXFLAGS) -o $(FORK) $(FORK_SRC)
+$(FORK): $(FORK_SRC) $(SOCKET_SRC)
+	$(CXX) $(CXXFLAGS) -o $(FORK) $(FORK_SRC) $(SOCKET_SRC)
 
 clean:
 	rm -f $(SERVER) $(FORK)

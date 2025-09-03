@@ -1,14 +1,21 @@
 #include <algorithm>
 #include <cctype>
+#include <exception>
 #include <iostream>
 #include <regex>
 #include <string>
 #include <sstream>
 
+#include "Socket.h"
+
 #define MAX_FILE_SIZE 10240
 
 class Fork {
  private:
+  Socket* forkSocket;
+  std::string serverHost;
+  int serverPort;
+
   bool is_valid_filename(const std::string& filename) {
     if (filename.empty() || filename.length() > 255) return false;
     std::regex valid_chars(R"([a-zA-Z0-9._-]+)");
@@ -25,12 +32,22 @@ class Fork {
   }
 
   std::string comm_w_server(const std::string& method) {
-    std::cout << "[Fork to Server] " << method << std::endl;
-    // TODO: connect them so server can return response
-    std::cout << "Enter server response: ";
-    std::string response;
-    std::getline(std::cin, response);
-    return response;
+    try {
+      std::cout << "[Fork to Server] " << method << std::endl;
+      this->forkSocket->Write(method.c_str());
+      this->forkSocket->Write("\n");
+
+      char buffer[4096];
+      size_t bytesRead = forkSocket->Read(buffer, sizeof(buffer) - 1);
+      buffer[bytesRead] = '\0';
+
+      std::string response(buffer);
+      if (!response.empty() && response.back() == '\n')
+        response.pop_back();
+      return response;
+    } catch (const std::exception& e) {
+      return "err Connection error: " + std::string(e.what());
+    }
   }
 
   void comm_w_client(const std::string& message) {
@@ -49,6 +66,25 @@ class Fork {
   }
 
  public:
+  Fork(const std::string& host, int port)
+    : serverHost(host), serverPort(port), forkSocket(nullptr) {
+  }
+
+  ~Fork() { if (this->forkSocket) delete this->forkSocket; }
+
+  bool connect_to_server() {
+    try {
+      this->forkSocket = new Socket('s', false);
+      this->forkSocket->Connect(this->serverHost.c_str(), this->serverPort);
+      std::cout << "Connected to server at " << this->serverHost << ":"
+        << this->serverPort << std::endl;
+      return true;
+    } catch (const std::exception& e) {
+      std::cerr << "Failed to connect to server: " << e.what() << std::endl;
+      return false;
+    }
+  }
+
   std::string process_client_command(const std::string& command) {
     std::istringstream iss(command);
     std::string method;
@@ -96,6 +132,10 @@ class Fork {
   }
 
   void run() {
+    if (!this->connect_to_server()) {
+      std::cerr << "Cannot start fork without server connection" << std::endl;
+      return;
+    }
     std::cout << "=== ASCII ART FORK STARTED ===\n" << std::endl;
     std::cout << "Method: ";
 
@@ -111,8 +151,12 @@ class Fork {
   }
 };
 
-int main() {
-  Fork fork;
+int main(int argc, char* argv[]) {
+  if (argc != 3) {
+    std::cout << "USAGE: ./fork server_host server_port" << std::endl;
+    return 1;
+  }
+  Fork fork(argv[1], std::stoi(argv[2]));
   fork.run();
   return 0;
 }
