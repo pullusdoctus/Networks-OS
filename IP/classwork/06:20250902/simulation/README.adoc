@@ -1,0 +1,96 @@
+= Simulación de Servidor Tenedor y Servidor de Figuras
+:toc:
+:icons: font
+:source-highlighter: rouge
+
+== Descripción General
+
+Este proyecto implementa una **simulación de protocolo** entre un **Servidor Tenedor** y un **Servidor de Figuras**, usando hilos y colas compartidas para la comunicación.
+
+La idea central es que:
+
+* **Clientes** envían peticiones en texto (por ejemplo: `GET triangle`, `LIST`, `ADD duck|<body>`).
+* El **Tenedor** traduce esas peticiones en un `Socket` (estructura plana con `client_id`, `function`, `input`, `output`).
+* El `Socket` se coloca en la cola `reqQ`, que el **Servidor de Figuras** consume.
+* El **Servidor** procesa el comando sobre su base de datos en memoria (`store_`) y genera una respuesta.
+* La respuesta se envía de vuelta por la cola `respQ` hacia el Tenedor.
+* Finalmente, el Tenedor entrega el resultado al cliente correcto según `client_id`.
+
+== Estructura de Carpetas
+
+[source,console]
+----
+Simulador/
+├─ app/
+│  └─ main.cpp               # Inicia la simulación (crea Tenedor, Servidor y Clientes)
+├─ common/
+│  ├─ Client.cpp             # Implementación de la clase Client
+│  ├─ Client.hpp             # Declaración de la clase Client
+│  ├─ Semaphore.cpp          # Implementación del semáforo (POSIX o equivalente)
+│  ├─ Semaphore.hpp          # Declaración del semáforo
+│  ├─ Thread.cpp             # Implementación de la clase base Thread
+│  ├─ Thread.hpp             # Declaración de la clase base Thread
+│  ├─ socket.h               # Definición de la estructura Socket y helpers
+│  ├─ tsq.hpp                # Cola threadsafe (TSQ) con semáforo/condvar
+│  └─ common.hpp             # Definiciones generales y utilidades (si aplica)
+├─ core/
+│  ├─ servidor.cpp           # Implementación de la clase Servidor
+│  ├─ servidor.hpp           # Declaración de la clase Servidor
+│  ├─ tenedor.cpp            # Implementación de la clase Tenedor
+│  └─ tenedor.hpp            # Declaración de la clase Tenedor
+├─ Makefile                  # Compilación automática
+└─ README.adoc               # Documento de explicación de la simulación
+----
+
+== Diagrama de la Simulación
+
+El siguiente diagrama describe el flujo entre Clientes, Tenedor y Servidor de Figuras:
+
+image::../Design/SImulador.drawio .svg[title="Diagrama de la simulación",align="center",width=600]
+
+* Los clientes envían texto (`LIST`, `GET`, `DEL`, `ADD`, …).
+* El Tenedor convierte texto → `Socket` y lo manda a `reqQ`.
+* El Servidor procesa y responde texto ← `Socket` vía `respQ`.
+* El Tenedor reenvía la respuesta al cliente original.
+
+== Manual de Compilación y Ejecución
+
+Para compilar y ejecutar la simulación:
+
+[source,console]
+----
+# Compilar con make
+$ make
+
+# Ejecutar el binario resultante
+$ ./sim
+
+# Limpiar archivos compilados
+$ make clean
+----
+
+== Ejemplo de Uso
+
+Al ejecutar `./sim`, se simulan clientes enviando comandos como:
+
+[source,console]
+----
+[C1 ->] PING
+[C1 <-] PONG
+
+[C2 ->] LIST
+[C2 <-] LIST
+ - triangle
+
+[C3 ->] ADD duck|  __
+<(o )___
+ ( ._> /
+  `---'
+[C3 <-] OK added duck
+----
+
+De esta forma se observa la interacción completa entre clientes, Tenedor y Servidor.
+
+== Créditos
+
+* Parte del código base de estructuras (colas y manejo de hilos) fue adaptado del trabajo de **Jeisson Hidalgo-Céspedes**.  
