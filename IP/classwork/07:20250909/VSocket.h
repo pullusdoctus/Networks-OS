@@ -19,7 +19,6 @@ class VSocket {
   ~VSocket();
 
   void BuildSocket(char type, bool IPv6 = false );
-  VSocket* CreateVSocket(int id);
   void Close();
 
   int EstablishConnection(const char* host, int port);

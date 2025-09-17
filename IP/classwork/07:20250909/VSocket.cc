@@ -60,20 +60,6 @@ void VSocket::BuildSocket(char type, bool IPv6) {
 }
 
 /**
- *   TODO: doc
-  *  Class constructor
-  *     use Unix socket system call
-  *
-  *  @param     char type: socket type to define
-  *     's' for stream
-  *     'd' for datagram
-  *  @param     bool ipv6: if we need a IPv6 socket
- */
-VSocket* VSocket::CreateVSocket(int id) {
-  // TODO: implement
-}
-
-/**
   * Class destructor
  **/
 VSocket::~VSocket() { this->Close(); }
@@ -203,7 +189,7 @@ int VSocket::MarkPassive(int backlog) {
   * WaitForConnection method
   *    use "accept" Unix system call (man 3 accept) (server mode)
   *
-  *  Waits for a peer connections, return a sockfd of the connecting peer
+  *  Waits for peer connections, return a sockfd of the connecting peer
  **/
 int VSocket::WaitForConnection() {
   // NOTE: idk if this has to be NULL
@@ -219,8 +205,8 @@ int VSocket::WaitForConnection() {
   *  cause all or part of a full-duplex connection on the socket associated with the file descriptor socket to be shut down
  **/
 int VSocket::Shutdown(int mode) {
-  int st = -1;
-  throw std::runtime_error("VSocket::Shutdown");
+  int st = shutdown(this->idSocket, mode);
+  if (st == -1) throw std::runtime_error("VSocket::Shutdown");
   return st;
 }
 

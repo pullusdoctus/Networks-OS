@@ -33,6 +33,19 @@ Socket::Socket(char type, bool IPv6) {
 }
 
 /**
+ * Class constructer
+ *  builds a new object from an already existing file descriptor
+ *
+ *  @param int fd: socket file descriptor
+ */
+Socket::Socket(int fd) {
+  this->idSocket = fd;
+  this->type = 's';
+  this->IPv6 = false;
+  this->port = -1;
+}
+
+/**
   *  Class destructor
   *
   *  @param     int id: socket descriptor
@@ -132,15 +145,6 @@ int Socket::Listen(int connections) {
  **/
 VSocket* Socket::AcceptConnection() {
   int id = this->WaitForConnection();
-  VSocket* peer = new Socket(id);
+  Socket* peer = new Socket(id);
   return peer;
-  // struct sockaddr_in clientAddr;
-  // socklen_t clientLen = sizeof(clientAddr);
-  // int clientSocketId = accept(this->idSocket, (struct sockaddr*)&clientAddr, &clientLen);
-  // if (clientSocketId == -1) {
-  //   throw std::runtime_error("Socket::Accept - could not accept client connection");
-  // }
-  // Socket* clientSocket = new Socket('s', false);
-  // clientSocket->idSocket = clientSocketId;
-  // return clientSocket;
 }
