@@ -1,6 +1,6 @@
 # 1. The left-hand bar is narrower. Why?
 
-![wavelength bars](./wavelength bar graphs networks hw4.png)
+![wavelength bars](./wavelength_bar_graphs_networks_hw4.png)
 
 Because at that frequency, the attenuation line hits a little valley. To the left of the bar, there is a big spike in attenuation, and to the right, a little hill. That small 0.85μ band represents a frequency where the frequency does not experiment much attenuation.
 
