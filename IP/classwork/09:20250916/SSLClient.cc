@@ -15,7 +15,7 @@
 #include <cstring>	// strlen
 #include <cstdio>
 
-#include "Socket.h"
+#include "SSLSocket.h"
 
 /**
  *

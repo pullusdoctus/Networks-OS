@@ -22,7 +22,7 @@
 #define PORT	4321
 
 
-void Service( VSocket * client ) {
+void Service( SSLSocket * client ) {
    char buf[ 1024 ] = { 0 };
    int sd, bytes;
    const char* ServerResponse="\n<Body>\n\
@@ -38,7 +38,7 @@ void Service( VSocket * client ) {
 \t<Password>ci0123</Password>\n\
 </Body>\n";
 
-   client->Accept();
+   client->AcceptSSL();
    client->ShowCerts();
 
    bytes = client->Read( buf, sizeof( buf ) );

@@ -37,7 +37,7 @@ class VSocket {
   virtual VSocket* AcceptConnection() = 0;
   int Shutdown(int mode);
 
-  // UPD:w
+  // UPD
 
   size_t SendTo(const void* buffer, size_t bufferSize, void* destiny);
   size_t ReceiveFrom(void*, size_t, void*);

@@ -17,20 +17,22 @@
 class SSLSocket : public VSocket {
   public:
     SSLSocket(bool IPv6 = false);				// Not possible to create with UDP, client constructor
-    SSLSocket(char*, char*, bool = false);		// For server connections
     SSLSocket(const char* certFilename,
               const char* keyFilename,
-              bool IPv6 = false);
-    SSLSocket(int);
+              bool IPv6 = false);		// For server connections
+    SSLSocket(int fd);
     void Copy(SSLSocket* og);
     ~SSLSocket();
 
-    int MakeConnection(const char*, int);
-    int MakeConnection(const char*, const char*);
+    size_t Connect(const char* hostName, int port) override;
+    int MakeConnection(const char* hostName, int port) override;
+    int MakeConnection(const char* host, const char* service) override;
+    VSocket* AcceptConnection() override;
+    void AcceptSSL();
 
-    size_t Write(const char*);
-    size_t Write(const void*, size_t);
-    size_t Read(void*, size_t);
+    size_t Write(const char*) override;
+    size_t Write(const void*, size_t) override;
+    size_t Read(void*, size_t) override;
 
     void ShowCerts();
     const char* GetCipher();
