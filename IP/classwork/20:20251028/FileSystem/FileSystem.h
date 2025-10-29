@@ -5,14 +5,16 @@
 
 const int TBLOQUE = 256;  // Block size in bytes
 const int BLOQUEDIRECTORIO = 0;  // Directory block
-const int TUNIDAD = 1024;  // Disk size in bytes
+const int TUNIDAD = 1048576;  // Disk size in bytes
 const int CANTIDADBLOQUES = TUNIDAD / TBLOQUE;
 const int CANTBLOQUESBITMAP = 32;
 const int BLOQUEINICIOCONTENIDO = 33;  // First data block
 const int TDIRECTORIO = 8;
 
 struct Entrada {
-    char nombre[10];  // Filename (max 10 chars)
+  // Increased filename buffer to allow slightly longer names used by tests
+  // Keep room for terminating null. Change if serialized on-disk format must be kept.
+  char nombre[16];  // Filename (max 15 chars)
     int16_t indice;   // Index block number
 };
 

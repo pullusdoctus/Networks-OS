@@ -7,7 +7,7 @@ bool INodo::asignarBloque(int bloque) {
   if (this->bloque0 == -1) { this->bloque0 = bloque; return true; }
   if (this->bloque1 == -1) { this->bloque1 = bloque; return true; }
   if (this->bloque2 == -1) { this->bloque2 = bloque; return true; }
-  if (this->bloque3 != -1) { this->bloque3 = bloque; return true; }
+  if (this->bloque3 == -1) { this->bloque3 = bloque; return true; }
 
   const std::size_t maxBlocksPerList = TBLOQUE / sizeof(int);
 
@@ -269,17 +269,19 @@ void FileSystem::guardarBloque(Bloque bloque[]) {
 void FileSystem::inicializarBitmap() {
   for (int i = 0; i < CANTIDADBLOQUES; i++) this->bitmap[i] = false;
   if (BLOQUEDIRECTORIO >= 0 && BLOQUEDIRECTORIO < CANTIDADBLOQUES) this->bitmap[BLOQUEDIRECTORIO] = true;
-  int bytesPerBlock = TBLOQUE;
-  int blocksNeeded = (CANTIDADBLOQUES + bytesPerBlock - 1) / bytesPerBlock;
+  // number of bits per block when storing bitmap as raw bits
+  int bitsPerBlock = TBLOQUE * 8;
+  int bitmapBlocksNeeded = (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
   int bitmapStart = BLOQUEDIRECTORIO + 1; // normalmente 1
-  for (int i = 0; i < blocksNeeded; i++) {
+  for (int i = 0; i < bitmapBlocksNeeded; i++) {
     int b = bitmapStart + i;
     if (b >= 0 && b < CANTIDADBLOQUES) this->bitmap[b] = true;
   }
   int bytesPerInodoBase = 4 * sizeof(int32_t) + sizeof(int32_t) + sizeof(int32_t);
   int metaBytesNeeded = TDIRECTORIO * bytesPerInodoBase;
+  int bytesPerBlock = TBLOQUE;
   int metaBlocksNeeded = (metaBytesNeeded + bytesPerBlock - 1) / bytesPerBlock;
-  int metaStart = BLOQUEDIRECTORIO + 1 + blocksNeeded;
+  int metaStart = BLOQUEDIRECTORIO + 1 + bitmapBlocksNeeded;
   for (int i = 0; i < metaBlocksNeeded; i++) {
     int b = metaStart + i;
     if (b >= 0 && b < CANTIDADBLOQUES) this->bitmap[b] = true;
@@ -292,10 +294,11 @@ void FileSystem::guardarBitmap() {
   std::vector<char> buffer(CANTIDADBLOQUES);
   for (int i = 0; i < CANTIDADBLOQUES; i++) buffer[i] = this->bitmap[i] ? 1 : 0;
 
-  int bytesPerBlock = TBLOQUE;
-  int blocksNeeded = (CANTIDADBLOQUES + bytesPerBlock - 1) / bytesPerBlock;
-  int blocksAvailable = std::min(blocksNeeded, CANTBLOQUESBITMAP);
+  int bitsPerBlock = TBLOQUE * 8;
+  int bitmapBlocksNeeded = (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
+  int blocksAvailable = std::min(bitmapBlocksNeeded, CANTBLOQUESBITMAP);
   int bitmapStart = BLOQUEDIRECTORIO + 1;
+  int bytesPerBlock = TBLOQUE;
 
   for (int blk = 0; blk < blocksAvailable; blk++) {
     std::vector<char> blkbuf(TBLOQUE, 0);
@@ -316,8 +319,9 @@ void FileSystem::cargarBitmap() {
   if (!this->unidad.is_open()) throw std::runtime_error("Unidad no abierta");
 
   int bytesPerBlock = TBLOQUE;
-  int blocksNeeded = (CANTIDADBLOQUES + bytesPerBlock - 1) / bytesPerBlock;
-  int blocksAvailable = std::min(blocksNeeded, CANTBLOQUESBITMAP);
+  int bitsPerBlock = TBLOQUE * 8;
+  int bitmapBlocksNeeded = (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
+  int blocksAvailable = std::min(bitmapBlocksNeeded, CANTBLOQUESBITMAP);
   int bitmapStart = BLOQUEDIRECTORIO + 1;
 
   std::vector<char> buffer(CANTIDADBLOQUES, 0);
@@ -327,6 +331,7 @@ void FileSystem::cargarBitmap() {
     this->unidad.seekg(targetBlock * TBLOQUE, std::ios::beg);
     std::vector<char> blkbuf(TBLOQUE);
     this->unidad.read(blkbuf.data(), blkbuf.size());
+    int bytesPerBlock = TBLOQUE;
     int offset = blk * bytesPerBlock;
     int toCopy = std::min(bytesPerBlock, CANTIDADBLOQUES - offset);
     if (toCopy > 0) std::memcpy(buffer.data() + offset, blkbuf.data(), toCopy);
@@ -352,7 +357,8 @@ int FileSystem::buscarArchivoPorNombre(const std::string& nombre) {
 }
 
 void FileSystem::crearInodo(std::string nombre) {
-  if (nombre.empty() || nombre.length() > 9) {
+  // Accept filenames up to 15 characters (fits Entrada.nombre[16])
+  if (nombre.empty() || nombre.length() > 15) {
     std::cerr << "Error: Invalid filename" << std::endl;
     return;
   }
@@ -537,6 +543,7 @@ char* FileSystem::leer(std::string nombre, int nbytes) {
 
     this->unidad.clear();
     Bloque* bloque = this->obtenerBloque(numBloque);
+  (void)numBloque; (void)bloque;
     if (!bloque) {
       std::cerr << "Error: Failed to read block " << numBloque << std::endl;
       continue;
@@ -637,15 +644,18 @@ bool FileSystem::escribir(std::string nombre, const char* datos) {
 
             this->unidad.clear();
             this->unidad.seekp(bloqueActual * TBLOQUE, std::ios::beg);
-            this->unidad.write(reinterpret_cast<const char*>(bloque), sizeof(Bloque));
+      this->unidad.write(reinterpret_cast<const char*>(bloque), sizeof(Bloque));
 
-            if (!this->unidad.good()) {
-                std::cerr << "Error: Failed to write block " << bloqueActual << " for " << nombre << std::endl;
-                delete bloque;
-                return false;
-            }
+      // Debug: report written block and first byte
+      (void)bloqueActual; (void)bytesToWrite;
 
-            delete bloque;
+      if (!this->unidad.good()) {
+        std::cerr << "Error: Failed to write block " << bloqueActual << " for " << nombre << std::endl;
+        delete bloque;
+        return false;
+      }
+
+      delete bloque;
             bytesWritten += bytesToWrite;
         }
 
@@ -701,9 +711,9 @@ void FileSystem::guardarDirectorio() {
             }
         }
 
-        int bytesPerBlock = TBLOQUE;
-        int bitmapBlocksNeeded = (CANTIDADBLOQUES + bytesPerBlock - 1) / bytesPerBlock;
-        int metaStart = BLOQUEDIRECTORIO + 1 + bitmapBlocksNeeded;
+  int bitsPerBlock = TBLOQUE * 8;
+  int bitmapBlocksNeeded = (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
+  int metaStart = BLOQUEDIRECTORIO + 1 + bitmapBlocksNeeded;
 
         this->unidad.seekp(metaStart * TBLOQUE, std::ios::beg);
         for (int i = 0; i < TDIRECTORIO; i++) {

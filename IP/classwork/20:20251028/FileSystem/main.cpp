@@ -98,9 +98,6 @@ int main(int argc, char** argv) {
   header("Summary");
   std::cout << "Passed: " << passed << "  Failed: " << failed << "\n\n";
 
-  std::cout << "Final filesystem state (debug):\n";
-  fs->imprimir();
-
   delete fs;
   return (failed == 0) ? 0 : 2;
 }
