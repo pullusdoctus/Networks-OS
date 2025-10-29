@@ -379,7 +379,6 @@ int FileSystem::buscarArchivoPorNombre(const std::string& nombre) {
 }
 
 void FileSystem::crearInodo(std::string nombre) {
-  // Accept filenames up to 15 characters (fits Entrada.nombre[16])
   if (nombre.empty() || nombre.length() > 15) {
     std::cerr << "Error: Invalid filename" << std::endl;
     return;
@@ -635,6 +634,7 @@ bool FileSystem::escribir(std::string nombre, const char* datos) {
         return false;
       }
       newBlocks.push_back(blk);
+      this->bitmap[blk] = true;
     }
 
     if (!this->directorio[posicionDir].nombre.empty()) {
@@ -663,7 +663,6 @@ bool FileSystem::escribir(std::string nombre, const char* datos) {
         for (int blk : newBlocks) this->bitmap[blk] = false;
         return false;
       }
-      this->bitmap[bloqueActual] = true;
 
       Bloque* bloque = new Bloque();
       std::memset(bloque->datos, '\0', TBLOQUE);
