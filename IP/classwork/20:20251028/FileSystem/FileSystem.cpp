@@ -1,13 +1,30 @@
-#include <cstring>
-#include <iostream>
-
 #include "FileSystem.h"
 
+// Copyright 2025 pullusdoctus
+
+#include <algorithm>
+#include <cstring>
+#include <iostream>
+#include <string>
+#include <vector>
+
 bool INodo::asignarBloque(int bloque) {
-  if (this->bloque0 == -1) { this->bloque0 = bloque; return true; }
-  if (this->bloque1 == -1) { this->bloque1 = bloque; return true; }
-  if (this->bloque2 == -1) { this->bloque2 = bloque; return true; }
-  if (this->bloque3 == -1) { this->bloque3 = bloque; return true; }
+  if (this->bloque0 == -1) {
+    this->bloque0 = bloque;
+    return true;
+  }
+  if (this->bloque1 == -1) {
+    this->bloque1 = bloque;
+    return true;
+  }
+  if (this->bloque2 == -1) {
+    this->bloque2 = bloque;
+    return true;
+  }
+  if (this->bloque3 == -1) {
+    this->bloque3 = bloque;
+    return true;
+  }
 
   const std::size_t maxBlocksPerList = TBLOQUE / sizeof(int);
 
@@ -45,14 +62,16 @@ int INodo::obtenerBloque(int bloque) {
   bloque -= 4;
 
   if (this->indirecto0) {
-    if (bloque >= 0 && bloque < static_cast<int>(this->indirecto0->bloques.size())) {
+    if (bloque >= 0 &&
+        bloque < static_cast<int>(this->indirecto0->bloques.size())) {
       return indirecto0->bloques[bloque];
     }
     bloque -= static_cast<int>(this->indirecto0->bloques.size());
   }
 
   if (this->indirecto1) {
-    if (bloque >= 0 && bloque < static_cast<int>(this->indirecto1->bloques.size())) {
+    if (bloque >= 0 &&
+        bloque < static_cast<int>(this->indirecto1->bloques.size())) {
       return indirecto1->bloques[bloque];
     }
   }
@@ -73,8 +92,9 @@ int INodo::obtenerUltimoBloque() {
 }
 
 FileSystem::FileSystem(bool crearNuevoDisco) : nFiles(0) {
-  this->unidad.open("./unidad.bin", std::ios::in | std::ios::out | std::ios::binary);
-  
+  this->unidad.open("./unidad.bin",
+                    std::ios::in | std::ios::out | std::ios::binary);
+
   if (!this->unidad.is_open()) {
     crearNuevoDisco = true;
   } else {
@@ -94,9 +114,10 @@ FileSystem::FileSystem(bool crearNuevoDisco) : nFiles(0) {
       std::vector<char> buffer(TUNIDAD, 0);
       nuevaUnidad.write(buffer.data(), buffer.size());
       nuevaUnidad.close();
-      
+
       if (this->unidad.is_open()) this->unidad.close();
-      this->unidad.open("./unidad.bin", std::ios::in | std::ios::out | std::ios::binary);
+      this->unidad.open("./unidad.bin",
+                        std::ios::in | std::ios::out | std::ios::binary);
     }
   }
 
@@ -110,7 +131,8 @@ FileSystem::FileSystem(bool crearNuevoDisco) : nFiles(0) {
 
   const int bitmapStart = BLOQUEDIRECTORIO + 1;
   const int bitsPerBlock = TBLOQUE * 8;
-  const int bitmapBlocksNeeded = (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
+  const int bitmapBlocksNeeded =
+      (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
   const int firstDataBlock = bitmapStart + bitmapBlocksNeeded;
 
   if (crearNuevoDisco) {
@@ -132,7 +154,7 @@ FileSystem::FileSystem(bool crearNuevoDisco) : nFiles(0) {
 
     this->unidad.clear();
     this->unidad.seekg(BLOQUEDIRECTORIO * TBLOQUE, std::ios::beg);
-    
+
     for (int i = 0; i < TDIRECTORIO; i++) {
       Entrada e;
       this->unidad.read(reinterpret_cast<char*>(&e), sizeof(Entrada));
@@ -184,7 +206,7 @@ FileSystem::FileSystem(bool crearNuevoDisco) : nFiles(0) {
       for (int b = firstDataBlock; b < CANTIDADBLOQUES; b++) {
         this->unidad.seekg(b * TBLOQUE, std::ios::beg);
         this->unidad.read(reinterpret_cast<char*>(&tmp), sizeof(Bloque));
-        
+
         bool occupied = false;
         for (int j = 0; j < TBLOQUE && !occupied; j++) {
           if (tmp.datos[j] != '\0') occupied = true;
@@ -194,8 +216,6 @@ FileSystem::FileSystem(bool crearNuevoDisco) : nFiles(0) {
     }
   }
 }
-
-
 
 void FileSystem::crearDisco(uint64_t size_in_bytes) {
   std::ofstream disk(this->nombreDisco, std::ios::binary);
@@ -207,20 +227,22 @@ void FileSystem::crearDisco(uint64_t size_in_bytes) {
   std::uint64_t written = 0;
 
   while (written < size_in_bytes) {
-    std::uint64_t to_write = std::min<std::uint64_t>(TBLOQUE, size_in_bytes - written);
+    std::uint64_t to_write =
+        std::min<std::uint64_t>(TBLOQUE, size_in_bytes - written);
     disk.write(buffer.data(), to_write);
     written += to_write;
   }
 
   disk.close();
-  std::cout << "Disco creado: " << this->nombreDisco << " (" << size_in_bytes << " bytes)\n";
+  std::cout << "Disco creado: " << this->nombreDisco << " (" << size_in_bytes
+            << " bytes)\n";
 }
 
 bool FileSystem::nombreExiste(std::string nombre) {
-  return this->buscarArchivoPorNombre(nombre) != -1 ;
+  return this->buscarArchivoPorNombre(nombre) != -1;
 }
 
-std::vector<Entrada> FileSystem::leerDirectorio(){
+std::vector<Entrada> FileSystem::leerDirectorio() {
   std::ifstream disk(this->nombreDisco, std::ios::binary);
   if (!disk) {
     throw std::runtime_error("Error: No se pudo abrir el disco.\n");
@@ -233,7 +255,7 @@ std::vector<Entrada> FileSystem::leerDirectorio(){
 
   this->entradas.clear();
   for (size_t i = 0; i < maxEntradas; i++) {
-      Entrada e;
+    Entrada e;
     disk.read(reinterpret_cast<char*>(&e), sizeof(Entrada));
 
     if (e.nombre[0] == '\0') {
@@ -248,15 +270,14 @@ std::vector<Entrada> FileSystem::leerDirectorio(){
   return this->entradas;
 }
 
-
 // +--------+
 // | BITMAP |
 // +--------+
 
 Bloque* FileSystem::obtenerBloque(int bloque) {
   Bloque* b = new Bloque();
-  this->unidad.seekg(bloque*TBLOQUE, std::ios::beg);
-  this->unidad.read(reinterpret_cast<char*>(b), sizeof(Bloque)); // leerlo
+  this->unidad.seekg(bloque * TBLOQUE, std::ios::beg);
+  this->unidad.read(reinterpret_cast<char*>(b), sizeof(Bloque));  // leerlo
   return b;
 }
 
@@ -265,19 +286,20 @@ void FileSystem::guardarBloque(Bloque bloque[]) {
   (void)bloque;
 }
 
-
 void FileSystem::inicializarBitmap() {
   for (int i = 0; i < CANTIDADBLOQUES; i++) this->bitmap[i] = false;
-  if (BLOQUEDIRECTORIO >= 0 && BLOQUEDIRECTORIO < CANTIDADBLOQUES) this->bitmap[BLOQUEDIRECTORIO] = true;
+  if (BLOQUEDIRECTORIO >= 0 && BLOQUEDIRECTORIO < CANTIDADBLOQUES)
+    this->bitmap[BLOQUEDIRECTORIO] = true;
   // number of bits per block when storing bitmap as raw bits
   int bitsPerBlock = TBLOQUE * 8;
   int bitmapBlocksNeeded = (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
-  int bitmapStart = BLOQUEDIRECTORIO + 1; // normalmente 1
+  int bitmapStart = BLOQUEDIRECTORIO + 1;  // normalmente 1
   for (int i = 0; i < bitmapBlocksNeeded; i++) {
     int b = bitmapStart + i;
     if (b >= 0 && b < CANTIDADBLOQUES) this->bitmap[b] = true;
   }
-  int bytesPerInodoBase = 4 * sizeof(int32_t) + sizeof(int32_t) + sizeof(int32_t);
+  int bytesPerInodoBase =
+      4 * sizeof(int32_t) + sizeof(int32_t) + sizeof(int32_t);
   int metaBytesNeeded = TDIRECTORIO * bytesPerInodoBase;
   int bytesPerBlock = TBLOQUE;
   int metaBlocksNeeded = (metaBytesNeeded + bytesPerBlock - 1) / bytesPerBlock;
@@ -341,7 +363,7 @@ void FileSystem::cargarBitmap() {
 }
 
 int FileSystem::buscarArchivoPorNombre(const std::string& nombre) {
-  bool existe= false ;
+  bool existe = false;
   int indice = 0;
   while (!existe && indice < TDIRECTORIO) {
     if (this->directorio[indice].nombre == nombre) {
@@ -362,7 +384,7 @@ void FileSystem::crearInodo(std::string nombre) {
     std::cerr << "Error: Invalid filename" << std::endl;
     return;
   }
-  
+
   int slot = -1;
   for (int i = 0; i < TDIRECTORIO; i++) {
     if (this->directorio[i].nombre == nombre) {
@@ -389,7 +411,7 @@ void FileSystem::crearInodo(std::string nombre) {
     this->guardarBitmap();
   } catch (const std::exception& e) {
     std::cerr << "Error creating file: " << e.what() << std::endl;
-    this->directorio[slot] = INodo(); // Reset on failure
+    this->directorio[slot] = INodo();  // Reset on failure
     if (this->nFiles > 0) this->nFiles--;
   }
 }
@@ -400,13 +422,13 @@ int FileSystem::buscarBloqueLibre() {
   const int bitsPerBlock = TBLOQUE * 8;
   const int bitmapBlocksNeeded = (bitmapBits + bitsPerBlock - 1) / bitsPerBlock;
   const int firstDataBlock = bitmapStart + bitmapBlocksNeeded;
-  
+
   for (int i = firstDataBlock; i < CANTIDADBLOQUES; i++) {
     if (!this->bitmap[i]) {
       return i;
     }
   }
-  
+
   return -1;
 }
 
@@ -435,7 +457,8 @@ bool FileSystem::agregar(std::string nombre, char byte) {
     return false;
   }
 
-  int bloqueArchivo = this->directorio[posicionDirectorio].obtenerUltimoBloque();
+  int bloqueArchivo =
+      this->directorio[posicionDirectorio].obtenerUltimoBloque();
   int writePosition = 0;
 
   if (bloqueArchivo == -1) {
@@ -504,7 +527,7 @@ bool FileSystem::agregar(std::string nombre, char byte) {
     this->unidad.clear();
     this->unidad.seekp(bloqueArchivo * TBLOQUE, std::ios::beg);
     this->unidad.write(reinterpret_cast<char*>(currentBlock), sizeof(Bloque));
-    
+
     if (!this->unidad.good()) {
       std::cerr << "Error: Failed to write to block" << std::endl;
       delete currentBlock;
@@ -543,7 +566,8 @@ char* FileSystem::leer(std::string nombre, int nbytes) {
 
     this->unidad.clear();
     Bloque* bloque = this->obtenerBloque(numBloque);
-  (void)numBloque; (void)bloque;
+    (void)numBloque;
+    (void)bloque;
     if (!bloque) {
       std::cerr << "Error: Failed to read block " << numBloque << std::endl;
       continue;
@@ -570,186 +594,197 @@ char* FileSystem::leer(std::string nombre, int nbytes) {
   return bytesLeidos;
 }
 
-
 bool FileSystem::escribir(std::string nombre, const char* datos) {
-    if (!datos) {
-        std::cerr << "Error: Null data pointer" << std::endl;
-        return false;
-    }
+  if (!datos) {
+    std::cerr << "Error: Null data pointer" << std::endl;
+    return false;
+  }
 
-    int posicionDir = this->buscarArchivoPorNombre(nombre);
+  int posicionDir = this->buscarArchivoPorNombre(nombre);
+  if (posicionDir == -1) {
+    for (int i = 0; i < TDIRECTORIO; i++) {
+      if (this->directorio[i].nombre.empty()) {
+        posicionDir = i;
+        break;
+      }
+    }
     if (posicionDir == -1) {
-        for (int i = 0; i < TDIRECTORIO; i++) {
-            if (this->directorio[i].nombre.empty()) {
-                posicionDir = i;
-                break;
-            }
+      std::cerr << "Error: No free directory entries" << std::endl;
+      return false;
+    }
+  }
+
+  try {
+    size_t len = std::strlen(datos);
+    size_t bytesWritten = 0;
+
+    size_t blocksNeeded = (len + TBLOQUE - 1) / TBLOQUE;
+    std::vector<int> newBlocks;
+
+    for (size_t i = 0; i < blocksNeeded; i++) {
+      int blk = this->buscarBloqueLibre();
+      if (blk == -1) {
+        std::cerr << "Error: No free blocks available for " << nombre
+                  << std::endl;
+        for (int allocated : newBlocks) {
+          this->bitmap[allocated] = false;
         }
-        if (posicionDir == -1) {
-            std::cerr << "Error: No free directory entries" << std::endl;
-            return false;
-        }
+        return false;
+      }
+      newBlocks.push_back(blk);
     }
 
-    try {
-        size_t len = std::strlen(datos);
-        size_t bytesWritten = 0;
+    if (!this->directorio[posicionDir].nombre.empty()) {
+      for (int i = 0; i < 4; i++) {
+        int blk = this->directorio[posicionDir].obtenerBloque(i);
+        if (blk >= 0) this->bitmap[blk] = false;
+      }
+      auto ind0 = this->directorio[posicionDir].getIndirecto0();
+      auto ind1 = this->directorio[posicionDir].getIndirecto1();
+      for (int blk : ind0)
+        if (blk >= 0) this->bitmap[blk] = false;
+      for (int blk : ind1)
+        if (blk >= 0) this->bitmap[blk] = false;
+    }
 
-        size_t blocksNeeded = (len + TBLOQUE - 1) / TBLOQUE;
-        std::vector<int> newBlocks;
+    this->directorio[posicionDir] = INodo();
+    this->directorio[posicionDir].nombre = nombre;
+    this->directorio[posicionDir].fecha = "2025-09-09";
 
-        for (size_t i = 0; i < blocksNeeded; i++) {
-            int blk = this->buscarBloqueLibre();
-            if (blk == -1) {
-                std::cerr << "Error: No free blocks available for " << nombre << std::endl;
-                for (int allocated : newBlocks) {
-                    this->bitmap[allocated] = false;
-                }
-                return false;
-            }
-            newBlocks.push_back(blk);
-        }
+    for (size_t i = 0; i < newBlocks.size(); i++) {
+      int bloqueActual = newBlocks[i];
 
-        if (!this->directorio[posicionDir].nombre.empty()) {
-            for (int i = 0; i < 4; i++) {
-                int blk = this->directorio[posicionDir].obtenerBloque(i);
-                if (blk >= 0) this->bitmap[blk] = false;
-            }
-            auto ind0 = this->directorio[posicionDir].getIndirecto0();
-            auto ind1 = this->directorio[posicionDir].getIndirecto1();
-            for (int blk : ind0) if (blk >= 0) this->bitmap[blk] = false;
-            for (int blk : ind1) if (blk >= 0) this->bitmap[blk] = false;
-        }
+      if (!this->directorio[posicionDir].asignarBloque(bloqueActual)) {
+        std::cerr << "Error: Failed to assign block " << bloqueActual << " to "
+                  << nombre << std::endl;
+        for (int blk : newBlocks) this->bitmap[blk] = false;
+        return false;
+      }
+      this->bitmap[bloqueActual] = true;
 
-        this->directorio[posicionDir] = INodo();
-        this->directorio[posicionDir].nombre = nombre;
-        this->directorio[posicionDir].fecha = "2025-09-09";
+      Bloque* bloque = new Bloque();
+      std::memset(bloque->datos, '\0', TBLOQUE);
 
-        for (size_t i = 0; i < newBlocks.size(); i++) {
-            int bloqueActual = newBlocks[i];
-            
-            if (!this->directorio[posicionDir].asignarBloque(bloqueActual)) {
-                std::cerr << "Error: Failed to assign block " << bloqueActual << " to " << nombre << std::endl;
-                for (int blk : newBlocks) this->bitmap[blk] = false;
-                return false;
-            }
-            this->bitmap[bloqueActual] = true;
+      size_t offset = i * TBLOQUE;
+      size_t bytesToWrite =
+          std::min(len - offset, static_cast<size_t>(TBLOQUE));
+      std::memcpy(bloque->datos, datos + offset, bytesToWrite);
 
-            Bloque* bloque = new Bloque();
-            std::memset(bloque->datos, '\0', TBLOQUE);
-
-            size_t offset = i * TBLOQUE;
-            size_t bytesToWrite = std::min(len - offset, static_cast<size_t>(TBLOQUE));
-            std::memcpy(bloque->datos, datos + offset, bytesToWrite);
-
-            this->unidad.clear();
-            this->unidad.seekp(bloqueActual * TBLOQUE, std::ios::beg);
+      this->unidad.clear();
+      this->unidad.seekp(bloqueActual * TBLOQUE, std::ios::beg);
       this->unidad.write(reinterpret_cast<const char*>(bloque), sizeof(Bloque));
 
       // Debug: report written block and first byte
-      (void)bloqueActual; (void)bytesToWrite;
+      (void)bloqueActual;
+      (void)bytesToWrite;
 
       if (!this->unidad.good()) {
-        std::cerr << "Error: Failed to write block " << bloqueActual << " for " << nombre << std::endl;
+        std::cerr << "Error: Failed to write block " << bloqueActual << " for "
+                  << nombre << std::endl;
         delete bloque;
         return false;
       }
 
       delete bloque;
-            bytesWritten += bytesToWrite;
-        }
-
-        if (bytesWritten != len) {
-            std::cerr << "Error: Only wrote " << bytesWritten << " of " << len << " bytes to " << nombre << std::endl;
-            return false;
-        }
-
-        this->guardarBitmap();
-        this->guardarDirectorio();
-        this->unidad.flush();
-        return true;
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error writing to " << nombre << ": " << e.what() << std::endl;
-        return false;
+      bytesWritten += bytesToWrite;
     }
+
+    if (bytesWritten != len) {
+      std::cerr << "Error: Only wrote " << bytesWritten << " of " << len
+                << " bytes to " << nombre << std::endl;
+      return false;
+    }
+
+    this->guardarBitmap();
+    this->guardarDirectorio();
+    this->unidad.flush();
+    return true;
+  } catch (const std::exception& e) {
+    std::cerr << "Error writing to " << nombre << ": " << e.what() << std::endl;
+    return false;
+  }
 }
 
 void FileSystem::guardarDirectorio() {
-    if (!this->unidad.is_open()) {
-        std::cerr << "Error: Storage unit not open" << std::endl;
-        return;
+  if (!this->unidad.is_open()) {
+    std::cerr << "Error: Storage unit not open" << std::endl;
+    return;
+  }
+
+  try {
+    this->unidad.clear();
+    this->unidad.seekp(BLOQUEDIRECTORIO * TBLOQUE, std::ios::beg);
+
+    for (int i = 0; i < TDIRECTORIO; i++) {
+      Entrada e;
+      std::memset(&e, 0, sizeof(Entrada));
+
+      if (!this->directorio[i].nombre.empty()) {
+        std::strncpy(e.nombre, this->directorio[i].nombre.c_str(),
+                     sizeof(e.nombre) - 1);
+        int firstBlock = this->directorio[i].obtenerBloque(0);
+        e.indice = static_cast<int16_t>(firstBlock);
+      }
+
+      this->unidad.write(reinterpret_cast<const char*>(&e), sizeof(Entrada));
+
+      if (!this->unidad.good()) {
+        throw std::runtime_error("Failed to write directory entry " +
+                                 std::to_string(i));
+      }
     }
 
-    try {
-        this->unidad.clear();
-        this->unidad.seekp(BLOQUEDIRECTORIO * TBLOQUE, std::ios::beg);
-        
-        for (int i = 0; i < TDIRECTORIO; i++) {
-            Entrada e;
-            std::memset(&e, 0, sizeof(Entrada));
-            
-            if (!this->directorio[i].nombre.empty()) {
-                std::strncpy(e.nombre, this->directorio[i].nombre.c_str(), sizeof(e.nombre) - 1);
-                int firstBlock = this->directorio[i].obtenerBloque(0);
-                e.indice = static_cast<int16_t>(firstBlock);
-            }
+    std::streamoff written = TDIRECTORIO * sizeof(Entrada);
+    if (written < TBLOQUE) {
+      std::vector<char> pad(TBLOQUE - written, 0);
+      this->unidad.write(pad.data(), pad.size());
+      if (!this->unidad.good()) {
+        throw std::runtime_error("Failed to write directory padding");
+      }
+    }
 
-            this->unidad.write(reinterpret_cast<const char*>(&e), sizeof(Entrada));
-            
-            if (!this->unidad.good()) {
-                throw std::runtime_error("Failed to write directory entry " + std::to_string(i));
-            }
-        }
-        
-        std::streamoff written = TDIRECTORIO * sizeof(Entrada);
-        if (written < TBLOQUE) {
-            std::vector<char> pad(TBLOQUE - written, 0);
-            this->unidad.write(pad.data(), pad.size());
-            if (!this->unidad.good()) {
-                throw std::runtime_error("Failed to write directory padding");
-            }
+    int bitsPerBlock = TBLOQUE * 8;
+    int bitmapBlocksNeeded =
+        (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
+    int metaStart = BLOQUEDIRECTORIO + 1 + bitmapBlocksNeeded;
+
+    this->unidad.seekp(metaStart * TBLOQUE, std::ios::beg);
+    for (int i = 0; i < TDIRECTORIO; i++) {
+      if (!this->directorio[i].nombre.empty()) {
+        for (int d = 0; d < 4; d++) {
+          int32_t blk = this->directorio[i].obtenerBloque(d);
+          this->unidad.write(reinterpret_cast<const char*>(&blk),
+                             sizeof(int32_t));
         }
 
-  int bitsPerBlock = TBLOQUE * 8;
-  int bitmapBlocksNeeded = (CANTIDADBLOQUES + bitsPerBlock - 1) / bitsPerBlock;
-  int metaStart = BLOQUEDIRECTORIO + 1 + bitmapBlocksNeeded;
+        auto writeIndirectList = [this](const std::vector<int>& list) {
+          int32_t count = static_cast<int32_t>(list.size());
+          this->unidad.write(reinterpret_cast<const char*>(&count),
+                             sizeof(int32_t));
+          for (int blk : list) {
+            int32_t b = blk;
+            this->unidad.write(reinterpret_cast<const char*>(&b),
+                               sizeof(int32_t));
+          }
+        };
 
-        this->unidad.seekp(metaStart * TBLOQUE, std::ios::beg);
-        for (int i = 0; i < TDIRECTORIO; i++) {
-            if (!this->directorio[i].nombre.empty()) {
-                for (int d = 0; d < 4; d++) {
-                    int32_t blk = this->directorio[i].obtenerBloque(d);
-                    this->unidad.write(reinterpret_cast<const char*>(&blk), sizeof(int32_t));
-                }
+        writeIndirectList(this->directorio[i].getIndirecto0());
+        writeIndirectList(this->directorio[i].getIndirecto1());
 
-                auto writeIndirectList = [this](const std::vector<int>& list) {
-                    int32_t count = static_cast<int32_t>(list.size());
-                    this->unidad.write(reinterpret_cast<const char*>(&count), sizeof(int32_t));
-                    for (int blk : list) {
-                        int32_t b = blk;
-                        this->unidad.write(reinterpret_cast<const char*>(&b), sizeof(int32_t));
-                    }
-                };
-
-                writeIndirectList(this->directorio[i].getIndirecto0());
-                writeIndirectList(this->directorio[i].getIndirecto1());
-
-                if (!this->unidad.good()) {
-                    throw std::runtime_error("Failed to write inode metadata for entry " + std::to_string(i));
-                }
-            }
-        }
-
-        this->unidad.flush();
-        
         if (!this->unidad.good()) {
-            throw std::runtime_error("Failed to flush all directory data");
+          throw std::runtime_error("Failed to write inode metadata for entry " +
+                                   std::to_string(i));
         }
+      }
     }
-    catch (const std::exception& e) {
-        std::cerr << "Error in guardarDirectorio: " << e.what() << std::endl;
+
+    this->unidad.flush();
+    if (!this->unidad.good()) {
+      throw std::runtime_error("Failed to flush all directory data");
     }
+  } catch (const std::exception& e) {
+    std::cerr << "Error in guardarDirectorio: " << e.what() << std::endl;
+  }
 }
 
 bool FileSystem::renombrar(std::string nombre, std::string nombreNuevo) {
@@ -763,9 +798,8 @@ bool FileSystem::renombrar(std::string nombre, std::string nombreNuevo) {
 void FileSystem::imprimirDirectorio() {
   std::cout << std::endl;
 
-  for (int i=0 ; i<TDIRECTORIO; i++) {
-    std::cout << directorio[i].nombre << " - "
-              << directorio [i].fecha << " - "
+  for (int i = 0; i < TDIRECTORIO; i++) {
+    std::cout << directorio[i].nombre << " - " << directorio[i].fecha << " - "
               << directorio[i].obtenerBloque(0) << std::endl;
   }
 
@@ -789,7 +823,7 @@ bool FileSystem::eliminar(std::string nombre) {
       this->unidad.clear();
       this->unidad.seekp(bloque * TBLOQUE, std::ios::beg);
       this->unidad.write(reinterpret_cast<char*>(bloqueActual), sizeof(Bloque));
-      
+
       delete bloqueActual;
     }
   };
@@ -836,7 +870,7 @@ bool FileSystem::reemplazar(std::string nombre, const char* datosNuevos) {
 std::string FileSystem::leerUnidad() {
   std::string bytesLeidos;
 
-  for (int i=0 ; i<TDIRECTORIO; i++) {
+  for (int i = 0; i < TDIRECTORIO; i++) {
     bytesLeidos += directorio[i].nombre;
     bytesLeidos += ",";
   }
@@ -856,7 +890,7 @@ void FileSystem::imprimirUnidad() {
     } else {
       std::cout << "";
     }
-    if (i % TBLOQUE == TBLOQUE-1) std::cout << std::endl;
+    if (i % TBLOQUE == TBLOQUE - 1) std::cout << std::endl;
   }
 
   std::cout << std::endl;
@@ -883,7 +917,6 @@ FileSystem::~FileSystem() {
     }
   } catch (...) {
   }
-  
   delete[] this->directorio;
   delete[] this->bitmap;
 }
