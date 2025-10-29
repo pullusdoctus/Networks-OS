@@ -476,14 +476,17 @@ bool FileSystem::agregar(std::string nombre, char byte) {
     this->bitmap[bloqueArchivo] = true;
     Bloque* newBlock = new Bloque();
     std::memset(newBlock->datos, '\0', TBLOQUE);
+    newBlock->datos[0] = byte;
 
     this->unidad.clear();
     this->unidad.seekp(bloqueArchivo * TBLOQUE, std::ios::beg);
     this->unidad.write(reinterpret_cast<char*>(newBlock), sizeof(Bloque));
+    this->unidad.flush();
     delete newBlock;
 
     this->guardarBitmap();
     this->guardarDirectorio();
+    return true;
   } else {
     Bloque* currentBlock = this->obtenerBloque(bloqueArchivo);
     bool needNewBlock = true;
