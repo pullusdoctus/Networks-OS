@@ -74,13 +74,17 @@ public:
    * Parsea un mensaje con formato: COMANDO /BEGIN/ [params] /END/
    */
   bool parseMessage(const std::string& message, std::string& command, 
-                    std::vector<std::string>& params) {
-    std::regex cmdRegex("([A-Z]+)\\s*/BEGIN/\\s*(.*)\\s*/END/");
+                    std::vector<std::string>& params, std::string& postscript) {
+    std::regex cmdRegex("([A-Z]+)\\s*/BEGIN/\\s*(.*)\\s*/END/\\s*(.*)");
     std::smatch matches;
     
     if (std::regex_search(message, matches, cmdRegex)) {
       command = matches[1].str();
       std::string paramsStr = matches[2].str();
+      postscript = matches[3].str();
+
+      postscript.erase(0, postscript.find_first_not_of(" \t\r\n"));
+      postscript.erase(postscript.find_last_not_of(" \t\r\n") + 1);
       
       // Separar parámetros por '/'
       size_t pos = 0;
@@ -224,7 +228,7 @@ public:
       serverConn->MakeConnection(selectedServer.c_str(), PORT_SERVER);
       
       std::string request = "ADD /BEGIN/ " + figureName + " / " + 
-                          size + " / " + content + " /END/\r\n";
+                          size  + " /END/" + content + "\r\n";
       serverConn->Write(request.c_str(), request.length());
       
       char buffer[MAXBUF];
@@ -302,13 +306,15 @@ public:
       while ((bytes = client->Read(buffer, sizeof(buffer))) > 0) {
         request.append(buffer, bytes);
         if (request.find("/END/") != std::string::npos) break;
+        else std::cerr << "/END/ no encontrado." << std::endl; break;
       }
       
       std::cout << "Solicitud recibida: " << request << std::endl;
       
       std::string command;
       std::vector<std::string> params;
-      if (!parseMessage(request, command, params)) {
+      std::string postscript;
+      if (!parseMessage(request, command, params, postscript)) {
         std::string response = buildResponse(400, "Formato de comando incorrecto");
         client->Write(response.c_str(), response.length());
         client->Close();
@@ -321,8 +327,8 @@ public:
         response = handleList();
       } else if (command == "GET" && params.size() >= 1) {
         response = handleGet(params[0]);
-      } else if (command == "ADD" && params.size() >= 3) {
-        response = handleAdd(params[0], params[1], params[2]);
+      } else if (command == "ADD" && params.size() >= 2) {
+        response = handleAdd(params[0], params[1], postscript);
       } else if (command == "DELETE" && params.size() >= 1) {
         response = handleDelete(params[0]);
       } else {
@@ -367,8 +373,9 @@ public:
           
           std::string command;
           std::vector<std::string> params;
+          std::string postscript;
           
-          if (parseMessage(message, command, params) && params.size() > 0) {
+          if (parseMessage(message, command, params, postscript) && params.size() > 0) {
             std::string ip = params[0];
             
             std::lock_guard<std::mutex> lock(serversMutex);
