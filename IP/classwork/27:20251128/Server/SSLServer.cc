@@ -20,15 +20,23 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <signal.h>
+#include <atomic>
 
 #include "SSLSocket.h"
 #include "FileSystem.h"
 #define	MAXBUF	256
 
-#define PORTCLIENT	8080 // Cliente
-// #define PORT2	8082 // Caché
+#define PORTCLIENT 8080 // Cliente
+#define PORTFORK 8081
+#define PORTCACHE 8082
+#define PORTUDP 4321
 
 #define MAX_FILESIZE 132096  // 4 * 256 (bloques directos) + 256 * 256 * 2 (bloques indirectos)
+
+std::atomic<bool> stopRequested(false);
+const char* g_ForkIP;
+int g_UDPPort;
+const char* g_myIP;
 
 /**
  * @brief Processes an HTTP request and displays the formatted response
@@ -501,6 +509,20 @@ void processIntraGroupCommand(VSocket* client, FileSystem* fs,
   client->Write(response.c_str(), response.length());
 }
 
+void handleSigint(int sig) {
+  (void)sig;
+  stopRequested = true;
+}
+
+void setupSigHandler() {
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = handleSigint;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGINT, &sa, nullptr);
+}
+
 /**
  * @brief Función principal del servidor
  *
@@ -515,6 +537,7 @@ void processIntraGroupCommand(VSocket* client, FileSystem* fs,
  * @return int Código de retorno (nunca retorna en operación normal)
  */
 int main( int cuantos, char ** argumentos ) {
+  setupSigHandler();
   if (cuantos < 7) {
     std::cerr << "Uso: " << argumentos[0] 
               << " <puerto_cliente> <ip_cache> <puerto_cache> "
@@ -531,8 +554,11 @@ int main( int cuantos, char ** argumentos ) {
 
   // Fork server
   const char* tenedorIP = argumentos[4];
+  g_myIP = tenedorIP;
   int tenedorUDPPort = atoi(argumentos[5]);
+  g_UDPPort = tenedorUDPPort;
   const char* myIP = argumentos[6];
+  g_myIP = myIP;
   notifyFork(tenedorIP, tenedorUDPPort, myIP, true);
 
   // Cliente
@@ -540,13 +566,6 @@ int main( int cuantos, char ** argumentos ) {
 	std::thread * worker;
 	int port = PORTCLIENT;
 	if ( cuantos > 1 ) port = atoi( argumentos[ 1 ] );
-
-  // Configurar manejador de señales para notificar al apagar
-  signal(SIGINT, [](int sig) {
-      // Notificar desconexión antes de terminar
-      // (implementar con variables globales o singleton)
-      exit(0);
-  });
 
 	#ifdef USE_IPV6
 		// IPv6
@@ -564,7 +583,16 @@ int main( int cuantos, char ** argumentos ) {
   // 1. Puerto para clientes (8080)
   // 2. Puerto para Tenedor (8081)
 	for( ; ; ) {
+    if (stopRequested) break;
 		client = (Socket * ) server->AcceptConnection();
+    if (!client) {
+      if (errno == EINTR) {
+        std::cout << "SIGINT. Notifying fork..." << std::endl;
+        notifyFork(g_ForkIP, g_UDPPort, g_myIP, false);
+        break;
+      }
+      continue;
+    }
 		worker = new std::thread( Service, client, fs, argumentos[2], atoi(argumentos[3]) );	// service connection
     worker->detach();
 	}
